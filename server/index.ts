@@ -90,9 +90,12 @@ app.use((req, res, next) => {
   // ALWAYS serve the app on the port specified in the environment variable PORT
   // Default to 5000 if not specified.
   const port = parseInt(process.env.PORT || "5000", 10);
-  
-  // Listen on localhost for local development
-  httpServer.listen(port, "localhost", () => {
-    log(`Server listening on http://localhost:${port}`);
+
+  // Bind to 0.0.0.0 in production (Render) and localhost in development
+  const host = process.env.HOST || (isProduction ? "0.0.0.0" : "localhost");
+
+  httpServer.listen(port, host, () => {
+    const displayHost = host === "0.0.0.0" ? "localhost" : host;
+    log(`Server listening on http://${displayHost}:${port}`);
   });
 })();

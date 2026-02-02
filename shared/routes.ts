@@ -1,9 +1,9 @@
 import { z } from 'zod';
-import { 
-  kvPairSchema, 
-  putRequestSchema, 
-  scanRequestSchema, 
-  deleteRequestSchema 
+import {
+  kvPairSchema,
+  putRequestSchema,
+  scanRequestSchema,
+  deleteRequestSchema
 } from './schema';
 
 export const errorSchemas = {
@@ -62,7 +62,7 @@ export const api = {
         }),
       },
     },
-    
+
     // System Operations
     stats: {
       method: 'GET' as const,
@@ -86,6 +86,8 @@ export const api = {
             lastFlushDurationMs: z.number(),
             lastCompactionDurationMs: z.number(),
             writeAmplification: z.number(),
+            bloomFilterHits: z.number(),
+            bloomFilterMisses: z.number(),
           }),
         }),
       },
@@ -97,7 +99,7 @@ export const api = {
         202: z.object({ message: z.string(), compactionId: z.string().optional() }),
       },
     },
-    
+
     // Benchmarking
     benchmark: {
       method: 'POST' as const,

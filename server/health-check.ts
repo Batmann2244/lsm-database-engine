@@ -61,21 +61,20 @@ export class HealthCheckManager {
   private checkMemtable() {
     try {
       const stats = this.lsm.getStats();
-      const memtableSize = stats.memtableSize || 0;
-      const entryCount = stats.memtableEntries || 0;
+      const memtableSize = stats.memTableSize || 0;
       const threshold = 50 * 1024; // 50KB threshold
 
       if (memtableSize > threshold * 1.5) {
         return {
           status: 'warn' as const,
           message: 'Memtable approaching flush threshold',
-          details: { size: memtableSize, entryCount, threshold }
+          details: { size: memtableSize, threshold }
         };
       }
 
       return {
         status: 'ok' as const,
-        details: { size: memtableSize, entryCount }
+        details: { size: memtableSize }
       };
     } catch (error) {
       return {
@@ -153,7 +152,8 @@ export class HealthCheckManager {
   private async checkDiskSpace(): Promise<any> {
     try {
       const stats = this.lsm.getStats();
-      const diskUsageBytes = stats.diskUsage || 0;
+      // Calculate disk usage from SSTable levels
+      const diskUsageBytes = stats.levels.reduce((total, level) => total + level.totalSize, 0) + stats.walSize;
       const diskUsageGB = diskUsageBytes / (1024 * 1024 * 1024);
       const warningThreshold = 10; // 10GB warning
 

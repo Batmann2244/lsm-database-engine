@@ -28,7 +28,7 @@ export default function Visualizer() {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen bg-background items-center justify-center">
+      <div className="flex h-screen w-screen bg-background items-center justify-center text-foreground">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-10 w-10 animate-spin text-primary" />
           <p className="text-muted-foreground font-mono text-sm animate-pulse">Initializing Telemetry...</p>
@@ -46,9 +46,9 @@ export default function Visualizer() {
   const readData = Array.from({ length: 20 }, (_, i) => ({ val: Math.random() * 5 }));
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen w-screen bg-background text-foreground">
       <Sidebar />
-      <main className="flex-1 overflow-y-auto p-8">
+      <main className="flex-1 overflow-y-auto p-8 text-foreground">
         <header className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-white font-mono flex items-center gap-3">
@@ -236,6 +236,105 @@ export default function Visualizer() {
               <p className="text-xs text-muted-foreground mt-2 font-mono">
                  {stats?.levels.reduce((acc, l) => acc + l.fileCount, 0)} total files
               </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Bloom Filter Efficiency Card */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <Card className="border-emerald-500/20 bg-emerald-500/5">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-emerald-400 flex items-center gap-2">
+                <Zap className="h-4 w-4" /> Bloom Filter Cache
+              </CardTitle>
+              <CardDescription className="font-mono text-xs text-emerald-400/70">
+                Key Existence Predictor
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex justify-between items-end">
+                  <span className="text-xs text-muted-foreground">Cache Hits</span>
+                  <div className="text-right">
+                    <div className="text-2xl font-bold font-mono text-emerald-400">
+                      {stats?.metrics.bloomFilterHits.toLocaleString()}
+                    </div>
+                    <span className="text-[10px] text-muted-foreground">(avoided disk reads)</span>
+                  </div>
+                </div>
+                <div className="flex justify-between items-end">
+                  <span className="text-xs text-muted-foreground">Actual Checks</span>
+                  <div className="text-right">
+                    <div className="text-2xl font-bold font-mono text-blue-400">
+                      {stats?.metrics.bloomFilterMisses.toLocaleString()}
+                    </div>
+                    <span className="text-[10px] text-muted-foreground">(required disk reads)</span>
+                  </div>
+                </div>
+                <div className="h-px bg-border/30 my-2"></div>
+                <div className="flex justify-between items-end">
+                  <span className="text-xs text-muted-foreground font-mono">Efficiency</span>
+                  <div className="text-right">
+                    <div className="text-2xl font-bold font-mono text-white">
+                      {(() => {
+                        const total = (stats?.metrics.bloomFilterHits || 0) + (stats?.metrics.bloomFilterMisses || 0);
+                        if (total === 0) return '0%';
+                        return (((stats?.metrics.bloomFilterHits || 0) / total) * 100).toFixed(1) + '%';
+                      })()}
+                    </div>
+                    <span className="text-[10px] text-muted-foreground">of checks</span>
+                  </div>
+                </div>
+              </div>
+              <Progress 
+                value={(() => {
+                  const total = (stats?.metrics.bloomFilterHits || 0) + (stats?.metrics.bloomFilterMisses || 0);
+                  if (total === 0) return 0;
+                  return ((stats?.metrics.bloomFilterHits || 0) / total) * 100;
+                })()}
+                className="h-2 bg-emerald-500/20 mt-3"
+                indicatorClassName="bg-emerald-500"
+              />
+            </CardContent>
+          </Card>
+
+          {/* Total Reads Card */}
+          <Card className="border-cyan-500/20 bg-cyan-500/5">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-cyan-400 flex items-center gap-2">
+                <Activity className="h-4 w-4" /> Read Statistics
+              </CardTitle>
+              <CardDescription className="font-mono text-xs text-cyan-400/70">
+                Query Performance
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex justify-between items-end">
+                  <span className="text-xs text-muted-foreground">Total Reads</span>
+                  <div className="text-2xl font-bold font-mono text-cyan-400">
+                    {stats?.metrics.totalReads.toLocaleString()}
+                  </div>
+                </div>
+                <div className="flex justify-between items-end">
+                  <span className="text-xs text-muted-foreground">Avg Latency</span>
+                  <div className="text-2xl font-bold font-mono text-cyan-400">
+                    {stats?.metrics.avgReadLatencyMs.toFixed(2)}<span className="text-xs text-muted-foreground ml-1">ms</span>
+                  </div>
+                </div>
+                <div className="h-px bg-border/30 my-2"></div>
+                <div className="flex justify-between items-end">
+                  <span className="text-xs text-muted-foreground font-mono">Throughput</span>
+                  <div className="text-2xl font-bold font-mono text-white">
+                    {(() => {
+                      // Estimate ops/sec from latency
+                      const avgLatency = stats?.metrics.avgReadLatencyMs || 0;
+                      if (avgLatency === 0) return '∞';
+                      return Math.round(1000 / avgLatency).toLocaleString();
+                    })()}<span className="text-xs text-muted-foreground ml-1">ops/sec</span>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>

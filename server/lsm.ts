@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import zlib from 'zlib';
 import { KVPair } from '@shared/schema';
 import { BloomFilter } from './bloom-filter';
 import { SkipList } from './skip-list';
@@ -236,8 +237,7 @@ export class LSMTree {
       for (const {key, value} of entries) {
         this.memTable.insert(key, {
           value,
-          timestamp: Date.now(),
-          isTombstone: false
+          timestamp: Date.now()
         });
       }
       
@@ -282,8 +282,7 @@ export class LSMTree {
       for (const key of keys) {
         this.memTable.insert(key, {
           value: null,
-          timestamp: Date.now(),
-          isTombstone: true
+          timestamp: Date.now()
         });
       }
       
@@ -617,7 +616,9 @@ export class LSMTree {
       return files.map(file => {
         try {
           const stats = fs.statSync(path.join(SST_DIR, file));
-          const content = JSON.parse(fs.readFileSync(path.join(SST_DIR, file), 'utf-8'));
+          const compressed = fs.readFileSync(path.join(SST_DIR, file));
+          const decompressed = zlib.gunzipSync(compressed);
+          const content = JSON.parse(decompressed.toString('utf-8'));
           return {
             filename: file,
             level: content.level || 0,
@@ -916,8 +917,8 @@ export class LSMTree {
         sparseIndex
       };
 
-      const contentStr = JSON.stringify(content);
-      await fs.promises.writeFile(filepath, contentStr);
+      const compressedData = await CompressionUtil.compressWithStats(JSON.stringify(content));
+      await fs.promises.writeFile(filepath, compressedData.compressed);
 
       // Create bloom filter for new SSTable
       const bloom = new BloomFilter(finalData.length, 0.01);
@@ -930,7 +931,7 @@ export class LSMTree {
       await fs.promises.writeFile(bloomPath, bloom.serialize());
 
       // Calculate write amplification
-      this.writeAmplification = (totalBytesRead + contentStr.length) / (contentStr.length || 1);
+      this.writeAmplification = (totalBytesRead + compressedData.compressedSize) / (compressedData.compressedSize || 1);
 
       // Delete old L0 files
       for (const sst of level0) {

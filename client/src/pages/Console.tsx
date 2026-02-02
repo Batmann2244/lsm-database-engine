@@ -98,9 +98,9 @@ export default function Console() {
   };
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen w-screen bg-background text-foreground">
       <Sidebar />
-      <main className="flex-1 flex flex-col overflow-hidden">
+      <main className="flex-1 flex flex-col overflow-hidden text-foreground">
         <div className="flex-1 p-8 space-y-6 overflow-y-auto">
           
           <header className="flex justify-between items-center mb-8">

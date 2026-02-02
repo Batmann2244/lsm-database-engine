@@ -12,7 +12,7 @@ export function Sidebar() {
   const [location] = useLocation();
 
   return (
-    <div className="flex h-screen w-64 flex-col border-r bg-card">
+    <div className="flex h-screen w-64 flex-col border-r bg-card text-foreground">
       <div className="flex h-16 items-center border-b px-6">
         <Database className="mr-2 h-6 w-6 text-primary" />
         <span className="text-lg font-bold tracking-tight text-white font-mono">

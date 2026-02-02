@@ -13,6 +13,7 @@ export default function Benchmarks() {
   const [writeCount, setWriteCount] = useState("1000");
   const [readCount, setReadCount] = useState("1000");
   const [results, setResults] = useState<BenchmarkResult[]>([]);
+  const [activeOperation, setActiveOperation] = useState<'write' | 'read' | null>(null);
   
   const benchmarkMutation = useBenchmark();
 
@@ -20,11 +21,14 @@ export default function Benchmarks() {
     const count = parseInt(countStr);
     if (isNaN(count) || count <= 0) return;
 
+    setActiveOperation(type);
     try {
       const result = await benchmarkMutation.mutateAsync({ type, count });
       setResults(prev => [...prev, result]);
     } catch (err) {
       console.error(err);
+    } finally {
+      setActiveOperation(null);
     }
   };
 
@@ -35,9 +39,9 @@ export default function Benchmarks() {
   }));
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen w-screen bg-background text-foreground">
       <Sidebar />
-      <main className="flex-1 overflow-y-auto p-8">
+      <main className="flex-1 overflow-y-auto p-8 text-foreground">
         <header className="mb-8">
           <h1 className="text-3xl font-bold tracking-tight text-white font-mono flex items-center gap-3">
             Benchmarks
@@ -68,9 +72,9 @@ export default function Benchmarks() {
                  <Button 
                     className="self-end bg-primary/20 text-primary hover:bg-primary/30 border border-primary/20"
                     onClick={() => runBenchmark('write', writeCount)}
-                    disabled={benchmarkMutation.isPending}
+                    disabled={activeOperation !== null}
                  >
-                    {benchmarkMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2"/> : <Zap className="w-4 h-4 mr-2"/>}
+                    {activeOperation === 'write' ? <Loader2 className="w-4 h-4 animate-spin mr-2"/> : <Zap className="w-4 h-4 mr-2"/>}
                     Run Writes
                  </Button>
                </div>
@@ -99,9 +103,9 @@ export default function Benchmarks() {
                  <Button 
                     className="self-end bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 border border-blue-500/20"
                     onClick={() => runBenchmark('read', readCount)}
-                    disabled={benchmarkMutation.isPending}
+                    disabled={activeOperation !== null}
                  >
-                    {benchmarkMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2"/> : <Zap className="w-4 h-4 mr-2"/>}
+                    {activeOperation === 'read' ? <Loader2 className="w-4 h-4 animate-spin mr-2"/> : <Zap className="w-4 h-4 mr-2"/>}
                     Run Reads
                  </Button>
                </div>
