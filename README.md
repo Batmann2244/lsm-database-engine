@@ -13,7 +13,7 @@ An educational **Log-Structured Merge (LSM) Tree** storage engine implementation
 ![Version](https://img.shields.io/badge/Version-2.0-blue) ![Status](https://img.shields.io/badge/Status-Ready-success)
 
 ---
-
+Working
 ## 🚀 Quick Start
 
 ```bash
